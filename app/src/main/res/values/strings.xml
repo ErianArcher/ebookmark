@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">EBookmark</string>
+    <string name="title_activity_bookmark">BookmarkActivity</string>
+    <string name="bookname">Book Name:</string>
+    <string name="page">Total Page:</string>
+    <string name="cover">Cover Photo:</string>
+    <string name="take_from_cam">Take from camera</string>
+    <string name="choose_from_pic">Choose from pictures</string>
+    <string name="tick">Complete</string>
+    <string name="date">Date:</string>
+    <string name="current_page">Current Page:</string>
+    <string name="note">Note:</string>
+</resources>
