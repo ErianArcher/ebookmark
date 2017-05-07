@@ -14,4 +14,6 @@ public interface ILoadDataView<T> {
     void loadSuccess(List<T> list);
 
     void finishLoading();
+
+    void update();
 }

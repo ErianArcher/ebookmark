@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,8 +34,7 @@ public class MainActivity extends AppCompatActivity implements ILoadDataView<Boo
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.main_toolbar));
 
-        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
-        booksPresenter.getBooks();
+        this.update();
     }
 
     @Override
@@ -89,6 +89,12 @@ public class MainActivity extends AppCompatActivity implements ILoadDataView<Boo
     }
 
     @Override
+    public void update() {
+        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
+        booksPresenter.getBooks();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_toolbar, menu);
         return true;
@@ -103,10 +109,24 @@ public class MainActivity extends AppCompatActivity implements ILoadDataView<Boo
                 break;
            case R.id.add_book:
                 // Go to add book activity
-                Toast.makeText(MainActivity.this, "Add!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, AddBookActivity.class);
+                startActivityForResult(intent, 1);
                 break;
             default:
         }
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case 1:
+                if (resultCode == RESULT_OK) {
+                    this.update();
+                    Log.d("MainActivity", "Book list need to be updated.");
+                }
+                break;
+            default:
+        }
     }
 }

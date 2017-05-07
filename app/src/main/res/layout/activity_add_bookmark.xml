@@ -44,7 +44,8 @@
         <EditText
             android:id="@+id/current_page_add_bookmark"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:inputType="number"/>
     </LinearLayout>
 
     <!-- Note-->

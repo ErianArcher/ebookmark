@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -118,6 +119,7 @@ public class BookModel implements IBookModel {
                     /*Toast.makeText(MyApplication.getContext(),
                             "Cannot load the information of books from database.",
                             Toast.LENGTH_LONG).show();*/
+                    e.printStackTrace();
                     listener.onError();
                     latest = false;
                 } finally {
@@ -154,14 +156,17 @@ public class BookModel implements IBookModel {
                         values.put("cover", bitmap2Blob(b.getCover()));
                         db.insert(BOOKS, null, values);
                         values.clear();
-                        for(Bookmark bm:
-                                b.getBookmarks()) {
-                            values.put("createDate", bm.getCreateDate().getTime());
-                            values.put("bookName", b.getBookName());
-                            values.put("currentPage", bm.getCurrentPage());
-                            values.put("note", bm.getNote());
-                            db.insert(BOOKMARKS, null, values);
-                            values.clear();
+
+                        if (b.noBookmarks() == false) {
+                            for (Bookmark bm :
+                                    b.getBookmarks()) {
+                                values.put("createDate", bm.getCreateDate().getTime());
+                                values.put("bookName", b.getBookName());
+                                values.put("currentPage", bm.getCurrentPage());
+                                values.put("note", bm.getNote());
+                                db.insert(BOOKMARKS, null, values);
+                                values.clear();
+                            }
                         }
 
                         values = null; //Garbage collection

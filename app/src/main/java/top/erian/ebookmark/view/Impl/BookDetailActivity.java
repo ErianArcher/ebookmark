@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +28,7 @@ import top.erian.ebookmark.view.ILoadDataView;
 public class BookDetailActivity extends AppCompatActivity implements ILoadDataView<Book>{
 
     private String bookName = null;
+    private boolean changed = false;
     ProgressDialog progressDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +45,7 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Display back button
 
-        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
-        booksPresenter.getBook(bookName);
+        this.update();
     }
 
     @Override
@@ -74,6 +75,7 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
         ImageView iv = (ImageView) findViewById(R.id.book_cover_detail);
         iv.setImageBitmap(book.getCover());
 
+        if (book.noBookmarks()) return;
         ListView bookmarks = (ListView) findViewById(R.id.bookmarks_list_view);
         BookmarkListAdapter bookmarkListAdapter = new BookmarkListAdapter(BookDetailActivity.this,
                 R.layout.bookmark_item, Arrays.asList(book.getBookmarks()));
@@ -94,6 +96,12 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
     }
 
     @Override
+    public void update() {
+        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
+        booksPresenter.getBook(this.bookName);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.detail_menu, menu);
         return true;
@@ -103,14 +111,44 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case android.R.id.home:
+                getResultIntent();
                 finish();
                 break;
             case R.id.add_bookmark:
-                Intent intent = new Intent(BookDetailActivity.this, AddBookmarkActivity.class);
-                startActivity(intent);
+                AddBookmarkActivity.actionStart(BookDetailActivity.this, bookName);
                 break;
             default:
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case 1:
+                if (resultCode == RESULT_OK) {
+                    this.update();
+                    changed = true;
+                    Log.d("MainActivity", "Bookmark list of " +
+                            this.bookName + " need to be updated.");
+                }
+                break;
+            default:
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        getResultIntent();
+        finish();
+    }
+
+    private void getResultIntent() {
+        Intent intent = new Intent();
+        if (changed == true) {
+            setResult(RESULT_OK, intent);
+        } else {
+            setResult(RESULT_CANCELED, intent);
+        }
     }
 }

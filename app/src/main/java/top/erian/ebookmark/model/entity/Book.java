@@ -75,7 +75,12 @@ public class Book {
         this.addBookmark(bookmarks);
     }
 
+    public boolean noBookmarks() {
+        return bookmarks.empty();
+    }
+
     public int getCurrentPage() {
+        if (noBookmarks()) return 0;
         return bookmarks.peek().getCurrentPage();
     }
 
