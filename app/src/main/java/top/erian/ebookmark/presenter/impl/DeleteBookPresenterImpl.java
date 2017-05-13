@@ -25,6 +25,16 @@ public class DeleteBookPresenterImpl implements DeleteBookPresenter, IDeleteEnti
     }
 
     @Override
+    public void deleteBooks(String... booksName) {
+        Book[] books = new Book[booksName.length];
+        for (int i = 0; i < booksName.length; i++) {
+            books[i].setBookName(booksName[i]);
+        }
+        this.view.startDeleting();
+        BookModel.getInstance().deleteBookEntities(this, books);
+    }
+
+    @Override
     public void onSuccess() {
         this.view.deleteFinished();
         this.view.deleteSuccess();

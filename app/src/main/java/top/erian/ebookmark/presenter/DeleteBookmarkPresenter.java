@@ -7,5 +7,6 @@ import top.erian.ebookmark.model.entity.Bookmark;
  */
 
 public interface DeleteBookmarkPresenter {
+    void deleteBookmark(String bookName, long createDate);
     void deleteBookmark(String bookName, Bookmark bookmark);
 }

@@ -1,8 +1,11 @@
 package top.erian.ebookmark.presenter.impl;
 
+import java.util.Date;
+
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.model.entity.Bookmark;
 import top.erian.ebookmark.model.impl.BookModel;
+import top.erian.ebookmark.model.impl.BookmarkModel;
 import top.erian.ebookmark.presenter.ISaveEntitiesListener;
 import top.erian.ebookmark.presenter.SaveBookmarkPresenter;
 import top.erian.ebookmark.view.ISaveDataView;
@@ -21,11 +24,16 @@ public class SaveBookmarkPresenterImpl implements SaveBookmarkPresenter, ISaveEn
 
     @Override
     public void saveBookmark(String bookName, Bookmark bookmark) {
-        Book newbook = new Book();
-        newbook.setBookName(bookName);
-        newbook.addBookmark(bookmark);
         this.view.startSaving();
-        BookModel.getInstance().saveBookEntities(this, newbook);
+        BookmarkModel.getInstance().saveBookmarkEntity(this, bookmark, bookName);
+    }
+
+    @Override
+    public void saveBookmark(String bookName, long createDate, int currentPage, String note) {
+        Bookmark bookmark = new Bookmark(currentPage, note);
+        bookmark.setCreateDate(new Date(createDate));
+        this.view.startSaving();
+        BookmarkModel.getInstance().saveBookmarkEntity(this, bookmark, bookName);
     }
 
     @Override

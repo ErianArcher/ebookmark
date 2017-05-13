@@ -8,4 +8,5 @@ import top.erian.ebookmark.model.entity.Book;
 
 public interface DeleteBookPresenter {
     void deleteBooks(Book... books);
+    void deleteBooks(String... booksName);
 }

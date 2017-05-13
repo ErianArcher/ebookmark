@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 import top.erian.ebookmark.MyApplication;
+import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.IBookModel;
 import top.erian.ebookmark.presenter.IDeleteEntitiesListener;
 import top.erian.ebookmark.presenter.IGetEntitiesListener;
@@ -34,7 +35,7 @@ public class BookModel implements IBookModel {
      * BookModel is a singleton, aimed at reducing too much unused BookModel
      */
     private List<Book> books;
-    private boolean latest;
+    protected boolean latest;
 
     public static final String BOOKS = new String("books");
     public static final String BOOKMARKS = new String("bookmarks");
@@ -63,7 +64,7 @@ public class BookModel implements IBookModel {
             return;
         }
 
-        new Handler().postDelayed(new Runnable() {
+        new Handler().post(new Runnable() {
             // Get Book from SQLite
             @Override
             public void run() {
@@ -87,22 +88,19 @@ public class BookModel implements IBookModel {
                             newBook.setPage(cursor.getInt(cursor.getColumnIndex
                                     ("page")));
 
-                            /* Retrieve the bookmarks of this book*/
+                            /* Retrieve the bookmarks of this book, and get the latest currentPage*/
                             Cursor c_bm = db.rawQuery("SELECT * FROM " + BOOKMARKS +
                                     " WHERE bookName = ? " +
                                     "ORDER BY createDate DESC", new String[] {newBook.getBookName()});
-
                             if (c_bm.moveToFirst()) {
-                                do {
-                                    Bookmark newBM = new Bookmark();
-                                    newBM.setCreateDate(new Date(c_bm.getLong(c_bm.getColumnIndex
-                                            ("createDate"))));
-                                    newBM.setCurrentPage(c_bm.getInt(c_bm.getColumnIndex
-                                            ("currentPage")));
-                                    newBM.setNote(c_bm.getString(c_bm.getColumnIndex
-                                            ("note")));
-                                    newBook.addBookmark(newBM);
-                                } while (cursor.moveToNext());
+                                int currentPageTemp = c_bm.getInt(c_bm.getColumnIndex
+                                                ("currentPage"));
+                                newBook.setCurrentPage(currentPageTemp > newBook.getPage()?
+                                newBook.getPage():currentPageTemp);
+                            } else {
+                                // The situation that this book haven't got its bookmark added,
+                                // the table "bookmarks" is empty
+                                newBook.setCurrentPage(0);
                             }
                             c_bm.close();
 
@@ -126,7 +124,7 @@ public class BookModel implements IBookModel {
                     eBookmarkDBHelper.close();
                 }
             }
-        }, 3000);
+        });
 
     }
 
@@ -139,7 +137,7 @@ public class BookModel implements IBookModel {
             this.loadBookEntities(FAKELISTENER);
         }
         
-        new Handler().postDelayed(new Runnable() {
+        new Handler().post(new Runnable() {
             @Override
             public void run() {
                 EBookmarkDBHelper eBookmarkDBHelper = new EBookmarkDBHelper(MyApplication.getContext());
@@ -157,69 +155,23 @@ public class BookModel implements IBookModel {
                         db.insert(BOOKS, null, values);
                         values.clear();
 
-                        if (b.noBookmarks() == false) {
-                            for (Bookmark bm :
-                                    b.getBookmarks()) {
-                                values.put("createDate", bm.getCreateDate().getTime());
-                                values.put("bookName", b.getBookName());
-                                values.put("currentPage", bm.getCurrentPage());
-                                values.put("note", bm.getNote());
-                                db.insert(BOOKMARKS, null, values);
-                                values.clear();
-                            }
-                        }
-
                         values = null; //Garbage collection
                         latest = false; //Database is changed
                         listener.onSuccess();
                     } else /*The second case: the book is partly changed*/{
                         Book bookDB = books.get(index);
                         ContentValues values = new ContentValues();
-                        if (!bookDB.samePage(b)) {values.put("page", b.getPage());}
-                        if (!bookDB.sameCover(b)) {values.put("cover", bitmap2Blob(b.getCover()));}
+                        if (!bookDB.samePage(b)) {
+                            if (!b.isDefaultPage()) values.put("page", b.getPage());
+                        }
+                        if (!bookDB.sameCover(b)) {
+                            if (!b.isDefaultCover()) values.put("cover", bitmap2Blob(b.getCover()));
+                        }
                         if (values.size() > 0) {
                             db.update(BOOKS, values, "bookName = ?", new String[]{bookDB.getBookName()});
                             latest = false; //Database is changed
                         }
                         values.clear();
-
-                        if (!bookDB.sameBookmark(b)) {
-                            latest = false; //Database is changed
-                            //Update BOOKMARKS table
-                            List<Bookmark> bookmarksDB = Arrays.asList(bookDB.getBookmarks());
-                            for (Bookmark bm:
-                                 b.getBookmarks()) {
-                                int bmIndex = bookmarksDB.indexOf(bm);
-                                if (bmIndex == -1) {// The first case: a totally new bookmark
-
-                                    values.put("createDate", bm.getCreateDate().getTime());
-                                    values.put("currentPage", bm.getCurrentPage());
-                                    values.put("bookName", bookDB.getBookName());
-                                    values.put("note", bm.getNote());
-                                    db.insert(BOOKMARKS, null, values);
-
-                                } else {// The second case: the bookmark exists
-
-                                    Bookmark bookmarkDB = bookmarksDB.get(bmIndex);
-
-                                    if (!bookmarkDB.sameCurrentPage(bm)) {
-                                        values.put("currentPage", bm.getCurrentPage());
-                                    }
-                                    if (!bookmarkDB.sameNote(bm)) {
-                                        values.put("note", bm.getNote());
-                                    }
-                                    //Update bookmark
-                                    db.update(BOOKMARKS, values, "bookName = ?",
-                                            new String[] {bookDB.getBookName()});
-                                    if (values.size() < 1) listener.onError();
-                                }
-                                values.clear();
-                            }
-                        } else if(latest == true){
-                            // bookDB.sameBookmark and latest == true means two book is exactly the same
-                            // And it is inferred that is an existing book in database, and it cannot be inserted
-                            listener.onError();
-                        }
 
                         values = null; //Garbage collection
 
@@ -229,7 +181,7 @@ public class BookModel implements IBookModel {
                 db.close();
                 eBookmarkDBHelper.close();
             }
-        }, 3000);
+        });
     }
 
     @Override
@@ -240,7 +192,7 @@ public class BookModel implements IBookModel {
             this.loadBookEntities(FAKELISTENER);
         }
 
-        new Handler().postDelayed(new Runnable() {
+        new Handler().post(new Runnable() {
             @Override
             public void run() {
                 EBookmarkDBHelper eBookmarkDBHelper = new EBookmarkDBHelper(MyApplication.getContext());
@@ -253,57 +205,27 @@ public class BookModel implements IBookModel {
                         listener.onError(); // There does not exist a book with the same name in db
                     } else {
                         Book bookDB = books.get(index);
-                        if (bookDB.samePage(b) &&
-                                bookDB.sameCover(b)) {
-                            if (!bookDB.sameBookmark(b)) {
-                                /*If the bookmarks are not the same,
-                                that means one or some of the bookmarks are deleted*/
-                                List<Bookmark> bookmarksDB = Arrays.asList(bookDB.getBookmarks());
-                                List<Bookmark> bookmarks_del = Arrays.asList(b.getBookmarks());
-                                for (Bookmark bm:
-                                     bookmarksDB) {
-                                    int bmIndex = bookmarks_del.indexOf(bm);
-                                    if (bmIndex == -1) {
-                                        // This means the bookmark does not need to be deleted
-                                        // Because it is not in the list of bookmarks that need to be deleted
-                                    } else {
-
-                                        db.delete(BOOKMARKS, "createDate = ?",
-                                                new String[]{String.valueOf(bm.getCreateDate())});
-
-                                        bookmarksDB.remove(bm);
-                                    }
-                                }
-                                // Update the books stored in memory
-                                bookDB.replaceBookmarks(bookmarksDB.toArray(new Bookmark[1]));
-                                // Garbage Collection
-                                bookmarksDB = null;
-                                bookmarks_del = null;
-                            } else {
-                                //Delete this book from database and memory (all information is the same)
-                                db.delete(BOOKS, "bookName = ?",
-                                        new String[] {bookDB.getBookName()});
-                                // Update the books stored in memory
-                                books.remove(index);
-                            }
-                        } else {
-                            // This book differs from the book in db with same name in some part,
-                            // This program classifies this book as a book to be deleted.
-                            // Delete this book from database.
-                            db.delete(BOOKS, "bookName = ?",
-                                    new String[] {bookDB.getBookName()});
-                            // Update the books stored in memory
-                            books.remove(index);
-                        }
+                        // This book differs from the book in db with same name in some part,
+                        // This program classifies this book as a book to be deleted.
+                        // Delete the bookmarks of this book from database
+                        db.delete(BOOKMARKS, "bookName = ?",
+                                new String[] {bookDB.getBookName()});
+                        // Delete this book from database.
+                        db.delete(BOOKS, "bookName = ?",
+                                new String[] {bookDB.getBookName()});
+                        // Update the books stored in memory
+                        books.remove(index);
 
                         bookDB = null; // Garbage Collection
+                        latest = false;
+                        listener.onSuccess();
                     }
                 }
 
                 db.close();
                 eBookmarkDBHelper.close();
             }
-        }, 3000);
+        });
     }
 
     @Override
@@ -314,7 +236,7 @@ public class BookModel implements IBookModel {
             this.loadBookEntities(FAKELISTENER);
         }
 
-        new Handler().postDelayed(new Runnable() {
+        new Handler().post(new Runnable() {
             @Override
             public void run() {
                 Book tar = new Book();
@@ -327,7 +249,7 @@ public class BookModel implements IBookModel {
                     listener.onSuccess(Arrays.asList(books.get(index)));
                 }
             }
-        }, 3000);
+        });
     }
 
     public boolean isLatest(){return latest;}
@@ -344,6 +266,8 @@ public class BookModel implements IBookModel {
 
     //convert blob data from SQLite to bitmap
     private Bitmap blob2Bitmap (byte[] blob) {
+        if (blob == null) return BitmapFactory
+                .decodeResource(MyApplication.getContext().getResources(), R.drawable.ic_tick);
         return BitmapFactory.decodeByteArray(blob, 0, blob.length);
     }
 }

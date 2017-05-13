@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import java.util.Date;
 
+import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.entity.Bookmark;
 import top.erian.ebookmark.presenter.SaveBookPresenter;
@@ -23,9 +25,8 @@ import top.erian.ebookmark.presenter.SaveBookmarkPresenter;
 import top.erian.ebookmark.presenter.impl.SaveBookmarkPresenterImpl;
 import top.erian.ebookmark.view.ISaveDataView;
 
-public class AddBookmarkActivity extends AppCompatActivity implements ISaveDataView {
+public class AddBookmarkActivity extends BaseActivity implements ISaveDataView {
 
-    private ProgressDialog progressDialog;
     private  String bookName;
     private Date currentTime;
     private TextView date;
@@ -105,7 +106,7 @@ public class AddBookmarkActivity extends AppCompatActivity implements ISaveDataV
                 if (checkInput() == false) break;
                 Bookmark bookmark = new Bookmark();
                 bookmark.setCreateDate(currentTime);
-                bookmark.setCurrentPage(Integer.valueOf(currentPage.getText().toString().trim()));
+                bookmark.setCurrentPage(Integer.parseInt(currentPage.getText().toString().trim()));
                 bookmark.setNote(note.getText().toString());
                 SaveBookmarkPresenter saveBookmarkPresenter = new SaveBookmarkPresenterImpl(this);
                 saveBookmarkPresenter.saveBookmark(this.bookName, bookmark);
@@ -120,7 +121,7 @@ public class AddBookmarkActivity extends AppCompatActivity implements ISaveDataV
         String currentPageStr = currentPage.getText().toString().trim();
         StringBuffer sb = new StringBuffer();
 
-        if (currentPageStr.isEmpty()) sb.append("Current Page field need to be filled.\n");
+        if (TextUtils.isEmpty(currentPageStr)) sb.append("Current Page field need to be filled.\n");
 
         if (sb.length() > 0) {
             AlertDialog.Builder dialog = new AlertDialog.Builder(AddBookmarkActivity.this)

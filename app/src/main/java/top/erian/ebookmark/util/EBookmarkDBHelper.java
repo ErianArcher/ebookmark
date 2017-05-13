@@ -16,12 +16,14 @@ public class EBookmarkDBHelper extends SQLiteOpenHelper {
     public static final String CREATE_BOOKS = new String("CREATE TABLE IF NOT EXISTS books" +
             " (bookName CHAR(50) PRIMARY KEY NOT NULL," +
             "cover BLOB," +
-            "page INTEGER NOT NULL)");
+            "page INTEGER NOT NULL CHECK(page >= 0) DEFAULT 0)");
+
     public static final String CREATE_BOOKMARKS = new String("CREATE TABLE IF NOT EXISTS bookmarks" +
             " (createDate INTEGER PRIMARY KEY NOT NULL, " +
             "bookName CHAR(50) NOT NULL, " +
-            "currentPage INTEGER NOT NULL, " +
-            "note TEXT)");
+            "currentPage INTEGER NOT NULL DEFAULT 0 CHECK(currentPage >= 0), " +
+            "note TEXT," +
+            "FOREIGN KEY(bookName) REFERENCES books(bookName))");
 
     public EBookmarkDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);

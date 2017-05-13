@@ -13,20 +13,18 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.presenter.BooksPresenter;
 import top.erian.ebookmark.presenter.impl.BooksPresenterImpl;
-import top.erian.ebookmark.util.BookListAdapter;
 import top.erian.ebookmark.view.ILoadDataView;
 
-public class MainActivity extends AppCompatActivity implements ILoadDataView<Book>{
+public class MainActivity extends BaseActivity{
 
-    private List<Book> bookList = null;
-    private ProgressDialog progressDialog;
+    BookListFragment bookListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,64 +32,22 @@ public class MainActivity extends AppCompatActivity implements ILoadDataView<Boo
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.main_toolbar));
 
-        this.update();
-    }
-
-    @Override
-    public void startLoading() {
+        // Initial the progressDialog
         progressDialog = new ProgressDialog(MainActivity.this);
         progressDialog.setTitle("Read data from database");
         progressDialog.setMessage("Loading...");
         progressDialog.setCancelable(false);
-        progressDialog.show();
+
+        bookListFragment = (BookListFragment)
+                getSupportFragmentManager().findFragmentById(R.id.book_list_fragment);
+        bookListFragment.update();
     }
 
     @Override
-    public void loadFailed() {
-        Toast.makeText(MainActivity.this, "Failed to load books.",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void loadSuccess(List<Book> list) {
-        bookList = list;
-        if (bookList == null) return;
-
-        ListView listView = (ListView) findViewById(R.id.book_list_view);
-        BookListAdapter adapter = new BookListAdapter(MainActivity.this, R.layout.book_item,
-                bookList);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position,
-                                    long id) {
-                Book book = bookList.get(position);
-                // Go to next Activity: BookmarkActivity
-                Intent intent = new Intent(MainActivity.this, BookDetailActivity.class);
-                intent.putExtra("bookName", book.getBookName());
-                startActivityForResult(intent,1);
-            }
-        });
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Bundle bundle = new Bundle();
-                // Pop up a dialog which let user choose what to do with the specific book
-                return true;
-            }
-        });
-    }
-
-    @Override
-    public void finishLoading() {
-        progressDialog.dismiss();
-        progressDialog = null;
-    }
-
-    @Override
-    public void update() {
-        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
-        booksPresenter.getBooks();
+    protected void onResume() {
+        super.onResume();
+        Log.d("MainActivity", "onResume: update");
+        bookListFragment.update();
     }
 
     @Override
@@ -122,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements ILoadDataView<Boo
         switch (requestCode) {
             case 1:
                 if (resultCode == RESULT_OK) {
-                    this.update();
                     Log.d("MainActivity", "Book list need to be updated.");
                 }
                 break;

@@ -1,8 +1,9 @@
 package top.erian.ebookmark.view.Impl;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,19 +18,27 @@ import android.widget.Toast;
 import java.util.Arrays;
 import java.util.List;
 
+import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.entity.Book;
-import top.erian.ebookmark.model.entity.Bookmark;
 import top.erian.ebookmark.presenter.BooksPresenter;
 import top.erian.ebookmark.presenter.impl.BooksPresenterImpl;
-import top.erian.ebookmark.util.BookmarkListAdapter;
 import top.erian.ebookmark.view.ILoadDataView;
 
-public class BookDetailActivity extends AppCompatActivity implements ILoadDataView<Book>{
+public class BookDetailActivity extends BaseActivity{
 
-    private String bookName = null;
-    private boolean changed = false;
-    ProgressDialog progressDialog;
+    private String bookName;
+    private Bitmap cover;
+    private ImageView coverIV;
+    private BookmarkListFragment bookmarkListFragment;
+
+    public static void actionStart(Context context, String bookName, Bitmap cover) {
+        Intent intent = new Intent(context, BookDetailActivity.class);
+        intent.putExtra("bookName", bookName);
+        intent.putExtra("cover", cover);
+        context.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +47,8 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
         // Set the toolbar
         Intent intent = getIntent();
         bookName = intent.getStringExtra("bookName");
+        cover = (Bitmap) intent.getParcelableExtra("cover");
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         if (bookName != null) {
             toolbar.setTitle(bookName);
@@ -45,60 +56,29 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Display back button
 
-        this.update();
-    }
+        // Set a bitmap for ImageView
+        coverIV = (ImageView) findViewById(R.id.book_cover_detail);
+        if (coverIV == null) Log.d("CoverIV", "onCreate: null");
+        if (cover == null) Log.d("cover", "onCreate: null");
+        if (cover != null) coverIV.setImageBitmap(cover);
 
-    @Override
-    public void startLoading() {
+        // Initial the progressDialog
         progressDialog = new ProgressDialog(BookDetailActivity.this);
-        progressDialog.setTitle("The details of " + bookName + " will be presented");
+        progressDialog.setTitle("Read data from database");
         progressDialog.setMessage("Loading...");
         progressDialog.setCancelable(false);
-        progressDialog.show();
+
+        //Initialize bookmark list fragment
+        bookmarkListFragment = (BookmarkListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.bookmark_list_fragment);
+        bookmarkListFragment.setBookName(bookName);
+        bookmarkListFragment.update();
     }
 
     @Override
-    public void loadFailed() {
-        Toast.makeText(BookDetailActivity.this,
-                "Failed to load the details of " + bookName + ".",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void loadSuccess(List<Book> list) {
-        Book book = list.get(0);
-        if (book == null) {
-            loadFailed();
-            return;
-        }
-
-        ImageView iv = (ImageView) findViewById(R.id.book_cover_detail);
-        iv.setImageBitmap(book.getCover());
-
-        if (book.noBookmarks()) return;
-        ListView bookmarks = (ListView) findViewById(R.id.bookmarks_list_view);
-        BookmarkListAdapter bookmarkListAdapter = new BookmarkListAdapter(BookDetailActivity.this,
-                R.layout.bookmark_item, Arrays.asList(book.getBookmarks()));
-        bookmarkListAdapter.setPage(book.getPage());
-        bookmarks.setAdapter(bookmarkListAdapter);
-        bookmarks.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Go to bookmark_detail activity
-            }
-        });
-    }
-
-    @Override
-    public void finishLoading() {
-        progressDialog.dismiss();
-        progressDialog = null;
-    }
-
-    @Override
-    public void update() {
-        BooksPresenter booksPresenter = new BooksPresenterImpl(this);
-        booksPresenter.getBook(this.bookName);
+    protected void onResume() {
+        super.onResume();
+        bookmarkListFragment.update();
     }
 
     @Override
@@ -111,7 +91,6 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case android.R.id.home:
-                getResultIntent();
                 finish();
                 break;
             case R.id.add_bookmark:
@@ -127,28 +106,11 @@ public class BookDetailActivity extends AppCompatActivity implements ILoadDataVi
         switch (requestCode) {
             case 1:
                 if (resultCode == RESULT_OK) {
-                    this.update();
-                    changed = true;
-                    Log.d("MainActivity", "Bookmark list of " +
+                    Log.d("BookDetailActivity", "Bookmark list of " +
                             this.bookName + " need to be updated.");
                 }
                 break;
             default:
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        getResultIntent();
-        finish();
-    }
-
-    private void getResultIntent() {
-        Intent intent = new Intent();
-        if (changed == true) {
-            setResult(RESULT_OK, intent);
-        } else {
-            setResult(RESULT_CANCELED, intent);
         }
     }
 }

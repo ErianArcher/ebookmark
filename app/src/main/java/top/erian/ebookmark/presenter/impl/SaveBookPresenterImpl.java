@@ -1,5 +1,7 @@
 package top.erian.ebookmark.presenter.impl;
 
+import android.graphics.Bitmap;
+
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.model.impl.BookModel;
 import top.erian.ebookmark.presenter.ISaveEntitiesListener;
@@ -22,6 +24,15 @@ public class SaveBookPresenterImpl implements SaveBookPresenter, ISaveEntitiesLi
     public void saveBooks(Book book) {
         this.view.startSaving();
         BookModel.getInstance().saveBookEntities(this, book);
+    }
+
+    @Override
+    public void saveBooks(String bookName, Bitmap cover, int page) {
+        Book book = new Book();
+        book.setBookName(bookName);
+        book.setPage(page);
+        book.setCover(cover);
+        this.view.startSaving();
     }
 
     @Override

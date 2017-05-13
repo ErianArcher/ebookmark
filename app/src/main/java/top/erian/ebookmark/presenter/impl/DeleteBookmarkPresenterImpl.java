@@ -1,8 +1,11 @@
 package top.erian.ebookmark.presenter.impl;
 
+import java.util.Date;
+
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.model.entity.Bookmark;
 import top.erian.ebookmark.model.impl.BookModel;
+import top.erian.ebookmark.model.impl.BookmarkModel;
 import top.erian.ebookmark.presenter.DeleteBookmarkPresenter;
 import top.erian.ebookmark.presenter.IDeleteEntitiesListener;
 import top.erian.ebookmark.view.IDeleteDataView;
@@ -20,12 +23,17 @@ public class DeleteBookmarkPresenterImpl implements DeleteBookmarkPresenter, IDe
     }
 
     @Override
-    public void deleteBookmark(String bookName, Bookmark bookmark) {
-        Book delbook = new Book();
-        delbook.setBookName(bookName);
-        delbook.addBookmark(bookmark);
+    public void deleteBookmark(String bookName, long createDate) {
+        Bookmark bookmark = new Bookmark();
+        bookmark.setCreateDate(new Date(createDate));
         this.view.startDeleting();
-        BookModel.getInstance().deleteBookEntities(this, delbook);
+        BookmarkModel.getInstance().deleteBookmarkEntity(this, bookmark, bookName);
+    }
+
+    @Override
+    public void deleteBookmark(String bookName, Bookmark bookmark) {
+        this.view.startDeleting();
+        BookmarkModel.getInstance().deleteBookmarkEntity(this, bookmark, bookName);
     }
 
     @Override

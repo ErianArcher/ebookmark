@@ -37,7 +37,7 @@ public class BooksPresenterImpl implements BooksPresenter, IGetEntitiesListener<
     }
 
     @Override
-    public void onSuccess(List<Book> bookList) {
+    public void onSuccess(final List<Book> bookList) {
         this.view.finishLoading();
         this.view.loadSuccess(bookList);
     }

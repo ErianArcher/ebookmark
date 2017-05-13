@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/book_cover"
@@ -24,7 +24,7 @@
 
     <ProgressBar
         android:id="@+id/read_progress"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:max="100"
@@ -35,18 +35,21 @@
         android:id="@+id/current_page"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/read_progress"
-        android:layout_above="@+id/read_progress"/>
+        android:layout_toLeftOf="@+id/spliter"
+        android:layout_above="@+id/read_progress"
+        android:layout_alignParentTop="true"/>
     <TextView
         android:id="@+id/spliter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/current_page"
+        android:layout_toLeftOf="@+id/page"
+        android:layout_alignParentTop="true"
         android:text="/"/>
     <TextView
         android:id="@+id/page"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/spliter"/>
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"/>
 
 </RelativeLayout>

@@ -2,13 +2,6 @@ package top.erian.ebookmark.model.entity;
 
 import android.graphics.Bitmap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import top.erian.ebookmark.util.Stack;
-
 /**
  * Created by root on 17-4-20.
  */
@@ -17,19 +10,20 @@ public class Book {
     private String bookName;
     private Bitmap cover;
     private int page;
-    private Stack<Bookmark> bookmarks = new Stack<>();
+    private int currentPage;
 
     public Book() {
         this.bookName = null;
         this.cover = null;
         this.page = -1;
+        this.currentPage = -1;
     }
 
-    public Book(String bookName, Bitmap cover, int page, Bookmark... bookmarks) {
+    public Book(String bookName, Bitmap cover, int page, int currentPage) {
         this.bookName = bookName;
         this.cover = cover;
         this.page = page;
-        addBookmark(bookmarks);
+        this.currentPage = currentPage;
     }
 
     public String getBookName() {
@@ -56,41 +50,21 @@ public class Book {
         this.page = page;
     }
 
-    public Bookmark[] getBookmarks() {
-        return bookmarks.toArray(new Bookmark[1]);
-    }
-
-    public void addBookmark(Bookmark... bookmarks) {
-        Collections.reverse(Arrays.asList(bookmarks));
-        //This is a stack, when pushing an object into the stack it will be at the top,
-        // but it will be covered by the coming one
-        for (Bookmark bm:
-                bookmarks) {
-            this.bookmarks.push(bm);
-        }
-    }
-
-    public void replaceBookmarks(Bookmark... bookmarks) {
-        this.bookmarks.clear();
-        this.addBookmark(bookmarks);
-    }
-
-    public boolean noBookmarks() {
-        return bookmarks.empty();
-    }
-
     public int getCurrentPage() {
-        if (noBookmarks()) return 0;
-        return bookmarks.peek().getCurrentPage();
+        return currentPage;
+    }
+
+    public void setCurrentPage(int currentPage) {
+        this.currentPage = currentPage;
     }
 
     @Override
     public String toString() {
         return "Book{" +
                 "bookName='" + bookName + '\'' +
+                ", currentPage=" + currentPage +
                 ", page=" + page +
                 ", cover=" + cover +
-                ", bookmarks=" + bookmarks +
                 '}';
     }
 
@@ -119,24 +93,13 @@ public class Book {
         if (this.cover.equals(b.cover)) return true;
         else return false;
     }
-    public boolean sameBookmark(Book b) {
-        /*If two entities are the same, then return true*/
-        if (this == b) return true;
-
-        List<Bookmark> thisBM = Arrays.asList(this.getBookmarks());
-        List<Bookmark> bBM = Arrays.asList(b.getBookmarks());
-
-        if (thisBM.size() != bBM.size()) return false;
-
-        for (Bookmark bm:
-             bBM) {
-            int index = thisBM.indexOf(bBM);
-            if (index == -1) return false;
-            Bookmark sameInThisBM = thisBM.get(index);
-            if (!sameInThisBM.sameCurrentPage(bm) ||
-                    !sameInThisBM.sameNote(bm)) return false;
-        }
-
-        return true;
+    public boolean sameCurrentPage(Book b) {
+        if (this.currentPage == b.currentPage) return true;
+        else return false;
     }
+    /*These function is used to judge if the fields are using default values*/
+    public boolean isDefaultBookName() { return this.bookName == null;}
+    public boolean isDefaultCover() { return this.cover == null; }
+    public boolean isDefaultPage() { return this.page == -1; }
+    public boolean isDefaultCurrentPage() { return this.currentPage == -1; }
 }

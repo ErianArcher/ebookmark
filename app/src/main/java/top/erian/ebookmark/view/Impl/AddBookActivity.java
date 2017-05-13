@@ -9,6 +9,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,15 +17,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.presenter.SaveBookPresenter;
 import top.erian.ebookmark.presenter.impl.SaveBookPresenterImpl;
 import top.erian.ebookmark.view.ISaveDataView;
 
-public class AddBookActivity extends AppCompatActivity implements ISaveDataView {
+public class AddBookActivity extends BaseActivity implements ISaveDataView {
 
-    private ProgressDialog progressDialog;
     private EditText bookName;
     private EditText page;
     private Bitmap cover;
@@ -92,7 +93,7 @@ public class AddBookActivity extends AppCompatActivity implements ISaveDataView 
                 if (checkInput() == false) break;// Do nothing if information is incomplete
                 Book book = new Book();
                 book.setBookName(bookName.getText().toString().trim());
-                book.setPage(Integer.valueOf(page.getText().toString().trim()));
+                book.setPage(Integer.parseInt(page.getText().toString().trim()));
                 book.setCover(cover);
                 SaveBookPresenter saveBookPresenter = new SaveBookPresenterImpl(this);
                 saveBookPresenter.saveBooks(book);
@@ -108,10 +109,10 @@ public class AddBookActivity extends AppCompatActivity implements ISaveDataView 
         String bookNameStr = bookName.getText().toString().trim();
         String pageStr = page.getText().toString().trim();
         StringBuffer sb = new StringBuffer();
-        if (bookNameStr.isEmpty()) sb.append("Book name field need to be filled.\n");
-        if (pageStr.isEmpty()) sb.append("Page field need to be filled.\n");
-        if (cover == null) // Skip, use default
-            cover = BitmapFactory.decodeResource(getResources(), R.drawable.ic_tick);
+        if (TextUtils.isEmpty(bookNameStr)) sb.append("Book name field need to be filled.\n");
+        if (TextUtils.isEmpty(pageStr)) sb.append("Page field need to be filled.\n");
+        /*if (cover == null) // Skip, use default
+            cover = BitmapFactory.decodeResource(getResources(), R.drawable.ic_tick);*/
         if (sb.length() > 0) {
             AlertDialog.Builder dialog = new AlertDialog.Builder(AddBookActivity.this)
                     .setTitle("Error")

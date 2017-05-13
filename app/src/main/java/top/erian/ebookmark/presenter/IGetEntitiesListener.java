@@ -11,6 +11,6 @@ import top.erian.ebookmark.model.entity.Book;
  */
 
 public interface IGetEntitiesListener<T> {
-    void onSuccess(List<T> entityList);//get entities
+    void onSuccess(final List<T> entityList);//get entities
     void onError();
 }
