@@ -95,10 +95,10 @@ public class BookmarkModel implements IBookmarkModel {
                         values.put("note", newbookmark.getNote());
                         db.update(BOOKMARKS, values,
                                 "WHERE createDate = ? AND bookName = ?",
-                                new String[] {String.valueOf(newbookmark.getCreateDate()), bookName});
+                                new String[] {String.valueOf(getCreateDate(newbookmark)), bookName});
                     } else { // The case that the bookmark is not in the database
                         // Do insert query here
-                        values.put("createDate", String.valueOf(newbookmark.getCreateDate().getTime()));
+                        values.put("createDate", String.valueOf(getCreateDate(newbookmark)));
                         values.put("bookName", bookName);
                         values.put("currentPage", String.valueOf(newbookmark.getCurrentPage()));
                         values.put("note", newbookmark.getNote());
@@ -126,13 +126,14 @@ public class BookmarkModel implements IBookmarkModel {
 
                 try {
                     eBookmarkDBHelper = new EBookmarkDBHelper(MyApplication.getContext());
+                    boolean inDB = checkItemInDB(eBookmarkDBHelper.getReadableDatabase(),
+                            delbookmark, bookName);// Check if there exist such a bookmark in db
                     SQLiteDatabase db = eBookmarkDBHelper.getWritableDatabase();
 
-                    if (checkItemInDB(eBookmarkDBHelper.getReadableDatabase(),
-                            delbookmark, bookName)) { // Check if there exist such a bookmark in db
+                    if (inDB) {
                         // Do delete query
                         db.delete(BOOKMARKS, "createDate = ? AND bookName = ?",
-                                new String[] {String.valueOf(delbookmark.getCreateDate().getTime()),
+                                new String[] {String.valueOf(getCreateDate(delbookmark)),
                                 bookName});
                         BookModel.getInstance().latest = false;
                         listener.onSuccess();
@@ -140,6 +141,7 @@ public class BookmarkModel implements IBookmarkModel {
                         listener.onError();
                 } catch (Exception e){
                     listener.onError();
+                    e.printStackTrace();
                 } finally {
                     eBookmarkDBHelper.close();
                 }
@@ -148,14 +150,19 @@ public class BookmarkModel implements IBookmarkModel {
     }
 
     private boolean checkItemInDB (SQLiteDatabase readableDB, Bookmark bookmark, String bookName) {
+        //Log.d("createDate", "checkItemInDB: " + bookmark.getCreateDate());
         Cursor cursor = readableDB.rawQuery("SELECT * FROM " + BOOKMARKS +
                 " WHERE bookName = ? AND createDate = ?",
-                new String[] { bookName, String.valueOf(bookmark.getCreateDate())});
+                new String[] { bookName, String.valueOf(getCreateDate(bookmark))});
         int rowCount = cursor.getCount();
         cursor.close();
         readableDB.close();
 
         if (rowCount == 0) return false;
         return true;
+    }
+
+    private long getCreateDate(Bookmark bm) {
+        return bm.getCreateDate().getTime();
     }
 }

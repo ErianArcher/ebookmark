@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="top.erian.ebookmark">
 
-    <!-- User perimission request-->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera2"/>
-    <uses-feature android:name="android.hardware.camera2.autofocus"/>
+    <!-- User perimission request -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera2" android:required="true" />
+    <uses-feature android:name="android.hardware.camera2.autofocus" android:required="false"/>
 
     <application
         android:name=".MyApplication"
@@ -26,10 +27,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.Impl.BookDetailActivity"
-            android:launchMode="singleTask"/>
+        <activity
+            android:name=".view.Impl.BookDetailActivity"
+            android:launchMode="singleTask" />
         <activity android:name=".view.Impl.AddBookActivity" />
-        <activity android:name=".view.Impl.AddBookmarkActivity"></activity>
+        <activity android:name=".view.Impl.AddBookmarkActivity" />
+
+        <provider
+            android:authorities="top.erian.ebookmark.fileprovider"
+            android:name="android.support.v4.content.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

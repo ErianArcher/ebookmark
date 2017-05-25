@@ -72,7 +72,7 @@ public class BookDetailActivity extends BaseActivity{
         bookmarkListFragment = (BookmarkListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.bookmark_list_fragment);
         bookmarkListFragment.setBookName(bookName);
-        bookmarkListFragment.update();
+        //bookmarkListFragment.update();
     }
 
     @Override

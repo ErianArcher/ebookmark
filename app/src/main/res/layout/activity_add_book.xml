@@ -49,23 +49,35 @@
 
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <TextView
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cover"/>
+            <Button
+                android:id="@+id/take_from_cam_add_book"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/take_from_cam"/>
+            <Button
+                android:id="@+id/choose_from_pic_add_book"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/choose_from_pic"/>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/cover_add_book"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/cover"/>
-        <Button
-            android:id="@+id/take_from_cam_add_book"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/take_from_cam"/>
-        <Button
-            android:id="@+id/choose_from_pic_add_book"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/choose_from_pic"/>
+            android:layout_gravity="center_horizontal"/>
     </LinearLayout>
 
 

@@ -40,13 +40,13 @@ public class MainActivity extends BaseActivity{
 
         bookListFragment = (BookListFragment)
                 getSupportFragmentManager().findFragmentById(R.id.book_list_fragment);
-        bookListFragment.update();
+        //bookListFragment.update();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("MainActivity", "onResume: update");
+        //Log.d("MainActivity", "onResume: update");
         bookListFragment.update();
     }
 

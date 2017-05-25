@@ -33,11 +33,22 @@ public class AddBookmarkActivity extends BaseActivity implements ISaveDataView {
     private EditText currentPage;
     private EditText note;
 
+    // Add mode actionStart
     public static void actionStart(Context context, String bookName) {
         Intent intent = new Intent(context, AddBookmarkActivity.class);
         intent.putExtra("bookName", bookName);
         AppCompatActivity appCompatActivity = (AppCompatActivity) context;
         appCompatActivity.startActivityForResult(intent, 1);
+    }
+    // Edit mode actionStart
+    public static void actionStart(Context context, String bookName, Bookmark bookmarkIntent) {
+        Intent intent = new Intent(context, AddBookmarkActivity.class);
+        intent.putExtra("bookName", bookName);
+        intent.putExtra("createDate", bookmarkIntent.getCreateDate());
+        intent.putExtra("currentPage", bookmarkIntent.getCurrentPage());
+        intent.putExtra("note", bookmarkIntent.getNote());
+        intent.putExtra("isEditMode", true);
+        context.startActivity(intent);
     }
 
     @Override
@@ -49,15 +60,28 @@ public class AddBookmarkActivity extends BaseActivity implements ISaveDataView {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        currentTime = new Date();
+        if (currentTime == null) currentTime = new Date();
         date = (TextView) findViewById(R.id.date_add_bookmark);
         currentPage = (EditText) findViewById(R.id.current_page_add_bookmark);
         note = (EditText) findViewById(R.id.note_add_bookmark);
 
-
-        date.setText(currentTime.toString());
         Intent intent = getIntent();
         this.bookName = intent.getStringExtra("bookName");
+        // Judge if it is edit mode
+        if (intent.getBooleanExtra("isEditMode", false)) {
+            currentTime = (Date) intent.getSerializableExtra("createDate");
+            currentPage.setText(String.valueOf(intent.getIntExtra("currentPage", 0)));
+            note.setText(intent.getStringExtra("note"));
+        }
+
+        date.setText(currentTime.toString());
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (progressDialog != null)
+            progressDialog.dismiss();
     }
 
     @Override

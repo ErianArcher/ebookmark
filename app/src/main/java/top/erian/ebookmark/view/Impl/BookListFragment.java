@@ -1,16 +1,22 @@
 package top.erian.ebookmark.view.Impl;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,14 +29,18 @@ import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.presenter.BooksPresenter;
+import top.erian.ebookmark.presenter.DeleteBookPresenter;
 import top.erian.ebookmark.presenter.impl.BooksPresenterImpl;
+import top.erian.ebookmark.presenter.impl.DeleteBookPresenterImpl;
+import top.erian.ebookmark.util.ContextMenuRecyclerView;
+import top.erian.ebookmark.view.IDeleteDataView;
 import top.erian.ebookmark.view.ILoadDataView;
 
 
 public class BookListFragment extends Fragment implements ILoadDataView<Book>{
 
     protected BaseActivity mActivity;
-    private RecyclerView bookListRecyclerView;
+    private ContextMenuRecyclerView bookListRecyclerView;
     private BooksPresenter booksPresenter;
 
     @Override
@@ -44,11 +54,20 @@ public class BookListFragment extends Fragment implements ILoadDataView<Book>{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_book_list, container, false);
-        bookListRecyclerView = (RecyclerView) view.findViewById(R.id.book_list_recycler_view);
+        bookListRecyclerView = (ContextMenuRecyclerView) view.findViewById(R.id.book_list_recycler_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(mActivity);
         bookListRecyclerView.setLayoutManager(layoutManager);
         BookListAdapter adapter = new BookListAdapter(new ArrayList<Book>());
         bookListRecyclerView.setAdapter(adapter);
+
+        //Context menu
+        bookListRecyclerView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            @Override
+            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                MenuInflater menuInflater = mActivity.getMenuInflater();
+                menuInflater.inflate(R.menu.context_menu, menu);
+            }
+        });
         return view;
     }
 
@@ -96,6 +115,77 @@ public class BookListFragment extends Fragment implements ILoadDataView<Book>{
     public void update() {
         if (booksPresenter == null) booksPresenter = new BooksPresenterImpl(this);
         booksPresenter.getBooks();
+    }
+
+    //Context menu
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuRecyclerView.RecyclerContextMenuInfo info =
+                (ContextMenuRecyclerView.RecyclerContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()) {
+            case (R.id.context_edit):
+                // Go to the edit activity of book
+                editBook(info.position);
+                break;
+            case (R.id.context_delete):
+                // Delete the book
+                deleteBook(info.position);
+                break;
+            default:
+                return super.onContextItemSelected(item);
+        }
+        return true;
+    }
+    private void editBook(int position) {
+        // Go to editBook activity
+        final Book book = ((BookListAdapter)bookListRecyclerView.getAdapter())
+                .mBookList.get(position);
+        AddBookActivity.actionStart(mActivity, book);
+    }
+    private void deleteBook(int position) {
+        final Book book = ((BookListAdapter)bookListRecyclerView.getAdapter())
+                .mBookList.get(position);
+        // Delete book here
+        AlertDialog.Builder dialog = new AlertDialog.Builder (mActivity);
+        dialog.setTitle("Delete operation")
+                .setMessage("This book " + book.getBookName() +
+                        " will be deleted.")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        DeleteBookPresenter deleteBookPresenter =
+                                new DeleteBookPresenterImpl(new IDeleteDataView() {
+                                    @Override
+                                    public void startDeleting() {
+
+                                    }
+
+                                    @Override
+                                    public void deleteFailed() {
+
+                                    }
+
+                                    @Override
+                                    public void deleteSuccess() {
+
+                                    }
+
+                                    @Override
+                                    public void deleteFinished() {
+                                        update();
+                                    }
+                                });
+                        deleteBookPresenter.deleteBooks(book);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).show();
+
     }
 
     /*** BookListAdapter
@@ -162,6 +252,7 @@ public class BookListFragment extends Fragment implements ILoadDataView<Book>{
             holder.currentPage.setText(String.valueOf(book.getCurrentPage()));
             holder.readProgress.setMax(book.getPage());
             holder.readProgress.setProgress(book.getCurrentPage());
+            holder.itemView.setLongClickable(true); // Context menu
         }
 
         @Override
@@ -175,9 +266,6 @@ public class BookListFragment extends Fragment implements ILoadDataView<Book>{
         public boolean areContentsTheSame(Book oldItem, Book newItem) {
             if (oldItem.sameCover(newItem) == false) return false;
             if (oldItem.samePage(newItem) == false) return false;
-            //Log.d("BookListAdapter", "areContentsTheSame: " + oldItem.sameCurrentPage(newItem));
-            Log.d("oldItem", "areContentsTheSame: " + String.valueOf(oldItem));
-            Log.d("newItem", "areContentsTheSame: " + String.valueOf(newItem));
             return oldItem.sameCurrentPage(newItem);
         }
 

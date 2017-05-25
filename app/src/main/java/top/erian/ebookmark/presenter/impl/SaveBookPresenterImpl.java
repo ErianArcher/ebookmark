@@ -1,11 +1,14 @@
 package top.erian.ebookmark.presenter.impl;
 
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.util.Log;
 
 import top.erian.ebookmark.model.entity.Book;
 import top.erian.ebookmark.model.impl.BookModel;
 import top.erian.ebookmark.presenter.ISaveEntitiesListener;
 import top.erian.ebookmark.presenter.SaveBookPresenter;
+import top.erian.ebookmark.util.ImageOperation;
 import top.erian.ebookmark.view.ISaveDataView;
 
 /**
@@ -21,7 +24,9 @@ public class SaveBookPresenterImpl implements SaveBookPresenter, ISaveEntitiesLi
     }
 
     @Override
-    public void saveBooks(Book book) {
+    public void saveBooks(final Book book) {
+        book.setCover(ImageOperation.compressBitmap(book.getCover()));
+        //Log.d("Cover size", "saveBooks: " + book.getCover().getByteCount()/1024 + " bytes");
         this.view.startSaving();
         BookModel.getInstance().saveBookEntities(this, book);
     }
@@ -31,8 +36,10 @@ public class SaveBookPresenterImpl implements SaveBookPresenter, ISaveEntitiesLi
         Book book = new Book();
         book.setBookName(bookName);
         book.setPage(page);
-        book.setCover(cover);
+        book.setCover(ImageOperation.compressBitmap(cover));
+        //Log.d("Cover size", "saveBooks: " + book.getCover().getByteCount()/1024 + " bytes");
         this.view.startSaving();
+        BookModel.getInstance().saveBookEntities(this, book);
     }
 
     @Override
