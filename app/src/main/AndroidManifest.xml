@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".view.Impl.MainActivity"
-            android:label="Books"
+            android:label="EBookmark"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

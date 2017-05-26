@@ -64,6 +64,10 @@ public class BookmarkModel implements IBookmarkModel {
                             bookmarks.add(bm);
                         } while (cursor.moveToNext());
                         listener.onSuccess(bookmarks);
+                    } else if (cursor.getCount() <= 0) {
+                        // When there is no bookmark in db,
+                        // it can still update the list of fragment
+                        listener.onSuccess(bookmarks);
                     } else listener.onError();
                 } catch (Exception e) {
                     listener.onError();
@@ -94,7 +98,7 @@ public class BookmarkModel implements IBookmarkModel {
                         values.put("currentPage", newbookmark.getCurrentPage());
                         values.put("note", newbookmark.getNote());
                         db.update(BOOKMARKS, values,
-                                "WHERE createDate = ? AND bookName = ?",
+                                "createDate = ? AND bookName = ?",
                                 new String[] {String.valueOf(getCreateDate(newbookmark)), bookName});
                     } else { // The case that the bookmark is not in the database
                         // Do insert query here

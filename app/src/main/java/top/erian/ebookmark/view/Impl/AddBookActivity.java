@@ -24,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +35,8 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import top.erian.ebookmark.BaseActivity;
 import top.erian.ebookmark.R;
@@ -45,7 +48,7 @@ import top.erian.ebookmark.view.ISaveDataView;
 public class AddBookActivity extends BaseActivity implements ISaveDataView {
 
     private static final int CAMERA_REQUEST = 5576;
-    private static final int GALLERY_REQUEST = 5577;
+    private static final int GALLERY_REQUEST = 5586;
 
 
     private EditText bookName;
@@ -97,18 +100,21 @@ public class AddBookActivity extends BaseActivity implements ISaveDataView {
                 cover_iv.setImageBitmap(cover);
         }
 
-        boolean cam_per = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
-                PackageManager.PERMISSION_GRANTED;
-        boolean pic_per = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED;
-        if (cam_per || pic_per) {
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(AddBookActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED)
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (ContextCompat.checkSelfPermission(AddBookActivity.this, Manifest.permission.CAMERA) !=
+                PackageManager.PERMISSION_GRANTED)
+            permissionList.add(Manifest.permission.CAMERA);
+
+        if (!permissionList.isEmpty()) {
             // If permission is not granted, set two button disabled
             takeFromCam.setEnabled(false);
             chooseFromPic.setEnabled(false);
 
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.CAMERA,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(this, permissions, 1);
             //0 means only calling requestPermissions(...)  once in our app
         }
         // OnClickListener on two button
@@ -201,7 +207,7 @@ public class AddBookActivity extends BaseActivity implements ISaveDataView {
                 }
                 break;
             case GALLERY_REQUEST:
-                if (requestCode == RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     if (Build.VERSION.SDK_INT >= 19) {
                         handleImageOnKitKat(data);
                     } else {
@@ -210,19 +216,24 @@ public class AddBookActivity extends BaseActivity implements ISaveDataView {
                 }
                 break;
             default:
+                Log.d("Request", "onActivityResult: " + requestCode);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == 0) {
+        if (requestCode == 1) {
             if (grantResults.length > 0) {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    takeFromCam.setEnabled(true);
-                if (grantResults[1] == PackageManager.PERMISSION_GRANTED)
-                    chooseFromPic.setEnabled(true);
-            }
+                for (int grantResult : grantResults) {
+                    if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                        finish();
+                        return;
+                    }
+                }
+                takeFromCam.setEnabled(true);
+                chooseFromPic.setEnabled(true);
+            } else finish();
         }
     }
 
